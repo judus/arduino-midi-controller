@@ -5,7 +5,7 @@ This project allows you to build a flexible MIDI controller for switching progra
 ## Features
 - **Program Change**: Press any configured button to switch programs within the current bank.
 - **Bank Navigation**: Press buttons 1 and 2 simultaneously for "bank up", or buttons 2 and 3 for "bank down".
-- **Adaptable Button Configuration**: You need >=3 buttons, according to the number of buttons connected, the programm will figure out the anount of banks necessary for a full coverage across the 128 MIDI channels
+- **Adaptable Button Configuration**: You need >=3 buttons, according to the number of buttons connected, the programm will figure out the amount of banks necessary for a full coverage across the 128 MIDI channels
 - **LCD Feedback**: Provides visual feedback on the current bank and program selection via an LCD display.
 
 ## Hardware Requirements
