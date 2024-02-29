@@ -5,7 +5,7 @@ This Arduino MIDI Controller project allows you to build a customizable MIDI con
 ## Features
 - **Program Change**: Press any configured button to switch programs within the current bank.
 - **Bank Navigation**: Press buttons 1 and 2 simultaneously for bank up, or buttons 2 and 3 bank down.
-- **Adaptable Button Configuration**:  You need at least 3 or more buttons, the programm will figure out the number of necessary banks for a full coverage accross the 128 MIDI channels
+- **Adaptable Button Configuration**: You need at least 3 buttons or more, the programm will figure out the number of necessary banks for a full coverage across the 128 MIDI channels
 - **LCD Feedback**: Provides visual feedback on the current bank and program selection via an LCD display.
 
 ## Hardware Requirements
