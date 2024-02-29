@@ -1,6 +1,6 @@
 # Arduino MIDI Controller
 
-This Arduino MIDI Controller project allows you to build a customizable MIDI controller for switching programs and banks.
+This project allows you to build a flexible MIDI controller for switching programs and banks.
 
 ## Features
 - **Program Change**: Press any configured button to switch programs within the current bank.
