@@ -12,19 +12,19 @@
 // The program calculates the necessary number of banks and maps each 
 // button to the corresponding MIDI channel within the current bank,
 // ensuring full coverage across all 128 MIDI channels.
-int buttonPins[] = {8, 9, 10, 13, 6, 7};
-// ===========================================================
+int buttonPins[] = {8, 9, 10}; // Minimum 3 buttons required
+// int buttonPins[] = {8, 9, 10, 13, 6, 7}; (my controller has 6)
+// ===================================================
 
-// ================ LCD Display Configuration ================
+// ================ LCD Display Configuration =========
 // Initializes the library with the numbers of the interface pins
 // Pin layout: RS, E, D4, D5, D6, D7
 // Adjust these pin numbers to match the connections between
 // your Arduino and the LCD display.
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-// ===========================================================
+// ====================================================
 
-// ================= END OF CONFIGURATION ====================
-
+// ================= END OF CONFIGURATION =============
 
 const int numButtons = sizeof(buttonPins) / sizeof(buttonPins[0]);
 int buttonStates[numButtons];
@@ -33,6 +33,9 @@ int currentBank = 1;
 int currentProgram = 1;
 const int maxMidiChannels = 128;
 int totalBanks;
+
+bool inChannelConfigMode = false;
+int midiChannel = 1;
 
 // Setup function: Initializes the Arduino setup
 void setup() {
@@ -50,8 +53,14 @@ void setup() {
 // Main loop function: Repeatedly executes the main logic
 void loop() {
     readButtons();
-    handleProgramChanges();
-    handleBankChanges();
+
+    if (inChannelConfigMode) {
+        handleChannelConfig();
+    } else {
+        handleProgramChanges();
+        handleBankChanges();
+        checkEnterChannelConfig();
+    }
 }
 
 // Reads the state of all configured buttons
@@ -65,10 +74,10 @@ void readButtons() {
 // Handles program changes based on button presses
 void handleProgramChanges() {
     for (int i = 0; i < numButtons; i++) { 
-        if (buttonStates[i] == LOW && previousButtonStates[i] == HIGH) { 
+        if (buttonPressed(i)) { 
             currentProgram = i + 1 + (currentBank - 1) * numButtons;
             if (currentProgram <= maxMidiChannels) { 
-                sendMidiProgramChange(baseProgramChangeCommand, currentProgram);
+                sendMidiProgramChange(currentProgram);
                 updateDisplay();
             }
             break; 
@@ -81,31 +90,74 @@ void handleBankChanges() {
     bool bankUpPressed = (buttonStates[0] == LOW && buttonStates[1] == LOW);
     bool bankDownPressed = (buttonStates[1] == LOW && buttonStates[2] == LOW);
 
-    if (bankUpPressed || bankDownPressed) {
-        delay(10); // Debounce delay
-        readButtons(); // Confirm button states
+    static unsigned long lastBankChange = 0;
+    if ((bankUpPressed || bankDownPressed) && millis() - lastBankChange > 500) {
+        delay(10);
+        readButtons();
         if (bankUpPressed) {
             currentBank = min(currentBank + 1, totalBanks);
-            updateDisplay();
         } else if (bankDownPressed) {
             currentBank = max(currentBank - 1, 1);
-            updateDisplay();
         }
+        updateDisplay();
+        lastBankChange = millis();
+    }
+}
+
+// Detect simultaneous btn1 + btn3 to enter config mode
+void checkEnterChannelConfig() {
+    if (buttonStates[0] == LOW && buttonStates[2] == LOW) {
+        delay(10);
+        readButtons();
+        if (buttonStates[0] == LOW && buttonStates[2] == LOW) {
+            inChannelConfigMode = true;
+            updateDisplay();
+            delay(300);
+        }
+    }
+}
+
+// Handles channel config mode
+void handleChannelConfig() {
+    if (buttonPressed(0)) {
+        midiChannel = min(16, midiChannel + 1);
+        updateDisplay();
+        delay(200);
+    }
+    if (buttonPressed(1)) {
+        midiChannel = max(1, midiChannel - 1);
+        updateDisplay();
+        delay(200);
+    }
+    if (buttonPressed(2)) {
+        inChannelConfigMode = false;
+        updateDisplay();
+        delay(300);
     }
 }
 
 // Updates the display with the current bank and program
 void updateDisplay() {
     lcd.clear();
-    lcd.print("Bank: ");
-    lcd.print(currentBank);
-    lcd.setCursor(0, 1);
-    lcd.print("Program: ");
-    lcd.print(currentProgram);
+    if (inChannelConfigMode) {
+        lcd.print("MIDI Channel: ");
+        lcd.print(midiChannel);
+    } else {
+        lcd.print("Bank: ");
+        lcd.print(currentBank);
+        lcd.setCursor(0, 1);
+        lcd.print("Program: ");
+        lcd.print(currentProgram);
+    }
 }
 
 // Sends a MIDI Program Change message
-void sendMidiProgramChange(int commandType, int programNumber) {
-    Serial.write(commandType);
-    Serial.write(programNumber - 1); // MIDI programs are 0-indexed
+void sendMidiProgramChange(int programNumber) {
+    Serial.write(0xC0 | ((midiChannel - 1) & 0x0F));
+    Serial.write(programNumber - 1); // 0-indexed for MIDI
+}
+
+// Detects rising edge on a button press
+bool buttonPressed(int index) {
+    return buttonStates[index] == LOW && previousButtonStates[index] == HIGH;
 }
