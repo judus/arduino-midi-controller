@@ -1,5 +1,12 @@
 #include <LiquidCrystal.h>
 
+// The MIDI channel used for program changes is user-configurable:
+// - Pressing button 1 + 3 simultaneously enters channel config mode
+// - In this mode:
+//     - Button 1 increases the MIDI channel (1–16)
+//     - Button 2 decreases it
+//     - Button 3 exits config mode
+
 // ================= CONFIGURATION ====================
 
 // =============== Button Configuration ==============
@@ -10,7 +17,7 @@
 // - Simultaneous press of button 1 and 2 switches to the next bank.
 // - Simultaneous press of button 2 and 3 switches to the previous bank.
 // The program calculates the necessary number of banks and maps each 
-// button to the corresponding MIDI channel within the current bank,
+// button to the corresponding MIDI program within the current bank,
 // ensuring full coverage across all 128 MIDI channels.
 int buttonPins[] = {8, 9, 10}; // Minimum 3 buttons required
 // int buttonPins[] = {8, 9, 10, 13, 6, 7}; (my controller has 6)
